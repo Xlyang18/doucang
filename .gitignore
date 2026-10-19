@@ -1,0 +1,17 @@
+node_modules/
+dist/
+release/
+.preview/
+screenshots/
+
+*.log
+.DS_Store
+
+# 用户真实数据与留档，绝不入库
+data.json
+data.pre-v*.json
+data.corrupt-*.json
+backups/
+
+# 构建临时产物
+*.blockmap
