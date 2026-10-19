@@ -91,6 +91,10 @@
 <img src="docs/screenshots/07-stats-flavor.png" width="49%" />
 </div>
 
+<div align="center">
+<img src="docs/screenshots/08-stats-month.png" width="80%" />
+</div>
+
 ### 📷 拍包装识标签
 
 拍一张包装背面，macOS Vision 本地 OCR 认出烘焙日期、产地、处理法、净含量、价格、烘焙度、海拔、风味。**图片不上传。**
@@ -121,7 +125,10 @@ Excel 6 个工作表；「美式豆册」A4 两列排版，每袋一张卡，打
 
 ### 🌙 深浅色
 
-![暗色](docs/screenshots/12-dark.png)
+<div align="center">
+<img src="docs/screenshots/11-settings.png" width="49%" />
+<img src="docs/screenshots/12-dark.png" width="49%" />
+</div>
 
 ### 🛟 数据安全
 
