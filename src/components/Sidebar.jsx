@@ -11,6 +11,7 @@ const ITEMS = [
   { id: 'wishlist', label: '心愿单', icon: 'star' },
   { id: 'shared', label: '分享与对比', icon: 'share' },
   { id: 'settings', label: '设置', icon: 'sliders' },
+  { id: 'changelog', label: '更新日志', icon: 'clock' },
   { id: 'about', label: '关于', icon: 'info' }
 ];
 
