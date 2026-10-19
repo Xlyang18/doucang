@@ -1,0 +1,207 @@
+/* ===========================================================
+   更新日志页（v2.2.0）
+   时间轴 + 可折叠条目。只用 transform/opacity 做动效，
+   时长与曲线沿用 motion.css 里的 --dur-* / --ease-*。
+   =========================================================== */
+
+.changelog { max-width: 1000px; }
+
+.cl-timeline {
+  position: relative;
+  margin-top: 6px;
+  padding-left: 4px;
+}
+
+/* 竖线：从第一条贯穿到最后一条 */
+.cl-entry {
+  position: relative;
+  display: block;
+  padding-left: 30px;
+  margin-bottom: 10px;
+}
+.cl-entry::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 30px;
+  bottom: -10px;
+  width: 1.5px;
+  background: var(--border);
+  opacity: 0.7;
+}
+.cl-entry:last-child::before { display: none; }
+
+/* 时间轴圆点 */
+.cl-rail { position: absolute; left: 0; top: 14px; width: 20px; display: flex; justify-content: center; }
+.cl-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: var(--card-solid);
+  border: 2px solid var(--border-strong, var(--border));
+  transition: transform var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out), background-color var(--dur-2) var(--ease-out);
+}
+.cl-dot.is-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.cl-entry.is-open .cl-dot { transform: scale(1.15); }
+
+/* ---------- 卡片头 ---------- */
+.cl-head {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease-out),
+              box-shadow var(--dur-2) var(--ease-out),
+              transform var(--dur-1) var(--ease-out),
+              background-color var(--dur-2) var(--ease-out);
+}
+.cl-head:hover { border-color: var(--border-strong, var(--border)); }
+.cl-head:active { transform: scale(0.995); }
+.cl-entry.is-open .cl-head {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.cl-summary-row { flex: 1; min-width: 0; }
+.cl-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.cl-version {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.cl-mood { font-size: 15px; line-height: 1; }
+
+.cl-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 99px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.01em;
+}
+.cl-pill-current { background: var(--accent-soft); color: var(--accent); }
+.cl-pill-new { background: rgba(52, 199, 89, 0.14); color: #248a3d; }
+.cl-pill-old { background: var(--nav-hover); color: var(--text-3); }
+:root[data-theme="dark"] .cl-pill-new { color: #4ade80; }
+
+.cl-title {
+  margin: 4px 0 2px;
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.cl-meta {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 11.5px; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.cl-dot-sep { opacity: 0.5; }
+.cl-counts { display: inline-flex; gap: 6px; margin-left: 4px; }
+.cl-count {
+  padding: 1px 6px; border-radius: 6px; font-size: 10.5px;
+  background: var(--nav-hover);
+}
+.cl-count-feat { color: #248a3d; background: rgba(52, 199, 89, 0.1); }
+.cl-count-fix { color: #c2410c; background: rgba(255, 149, 0, 0.12); }
+.cl-count-chore { color: var(--text-2); }
+:root[data-theme="dark"] .cl-count-feat { color: #4ade80; }
+:root[data-theme="dark"] .cl-count-fix { color: #fbbf24; }
+
+.cl-peek {
+  margin: 6px 0 0;
+  font-size: 12.5px; color: var(--text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.cl-chevron {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; flex: 0 0 auto;
+  color: var(--text-3);
+  transition: transform var(--dur-3) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.cl-entry.is-open .cl-chevron { transform: rotate(180deg); color: var(--text-2); }
+
+/* ---------- 展开区 ---------- */
+.cl-body {
+  padding: 0 16px 18px;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  background: var(--card);
+  animation: clOpen var(--dur-3) var(--ease-out) both;
+}
+@keyframes clOpen {
+  from { opacity: 0; transform: translate3d(0, -4px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.cl-lede {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--nav-hover);
+  font-size: 12.5px; line-height: 1.6; color: var(--text-2);
+}
+
+.cl-section { margin-bottom: 14px; }
+.cl-section:last-child { margin-bottom: 0; }
+
+.cl-section h4 {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0 0 7px;
+  font-size: 12.5px; font-weight: 650;
+  color: var(--text-2);
+}
+.cl-sec-emoji { font-size: 11px; opacity: 0.85; }
+.cl-sec-n {
+  margin-left: 2px;
+  padding: 0 6px; border-radius: 99px;
+  background: var(--nav-hover);
+  font-size: 10px; font-weight: 600; color: var(--text-3);
+}
+.cl-feat h4 { color: #248a3d; }
+.cl-fix h4 { color: #c2410c; }
+:root[data-theme="dark"] .cl-feat h4 { color: #4ade80; }
+:root[data-theme="dark"] .cl-fix h4 { color: #fbbf24; }
+
+.cl-section ul {
+  margin: 0; padding: 0; list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  column-gap: 26px;
+}
+.cl-section li {
+  position: relative;
+  padding: 5px 0 5px 16px;
+  font-size: 13px; line-height: 1.75; color: var(--text);
+  /* 颜文字是日文半角片假名等字符，统一交给系统字体渲染，避免忽大忽小 */
+  font-family: inherit;
+}
+.cl-section li::before {
+  content: '';
+  position: absolute; left: 3px; top: 12px;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--text-3);
+  opacity: 0.55;
+}
+
+.cl-foot {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.cl-foot .small { margin-top: 4px; }
