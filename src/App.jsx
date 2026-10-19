@@ -10,6 +10,7 @@ import WishlistPage from './pages/WishlistPage.jsx';
 import SharePage from './pages/SharePage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
+import ChangelogPage from './pages/ChangelogPage.jsx';
 import ImportCapture from './pages/ImportCapture.jsx';
 
 function Shell() {
@@ -64,6 +65,7 @@ function Shell() {
       case 'shared': return <SharePage />;
       case 'settings': return <SettingsPage />;
       case 'about': return <AboutPage />;
+      case 'changelog': return <ChangelogPage />;
       default: return <HomePage />;
     }
   };
