@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "豆藏 · 商品采集",
+  "version": "1.0.0",
+  "description": "在淘宝 / 天猫 / 京东商品页点一下，把标题、价格、克重送到本机豆藏。",
+  "permissions": ["activeTab", "scripting", "contextMenus"],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://item.taobao.com/*",
+    "https://detail.tmall.com/*",
+    "https://item.jd.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "发送到豆藏", "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" } },
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
+  "commands": {
+    "send-to-doucang": {
+      "suggested_key": { "default": "Alt+Shift+D" },
+      "description": "把当前商品页发送到豆藏"
+    }
+  }
+}
