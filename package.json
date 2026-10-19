@@ -1,7 +1,7 @@
 {
   "name": "doucang",
   "productName": "豆藏",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "豆藏 - 咖啡豆记录与管理：豆仓、冲煮记录、统计、OCR 识标签、链接导入、Excel 与豆册导出",
   "author": "DouCang",
   "license": "MIT",
