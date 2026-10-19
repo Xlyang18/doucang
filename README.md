@@ -10,10 +10,10 @@
 
 数据 100% 保存在本机，不联网、不上传、不注册。
 
-![Latest Release](https://img.shields.io/badge/release-v2.1.0-c08a5d)
+[![Latest Release](https://img.shields.io/github/v/release/Xlyang18/doucang?color=c08a5d&label=release)](https://github.com/Xlyang18/doucang/releases/latest)
 ![Platform](https://img.shields.io/badge/platform-macOS%2011%2B-black)
 ![Tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
 
@@ -136,10 +136,10 @@ Excel 6 个工作表；「美式豆册」A4 两列排版，每袋一张卡，打
 
 ### 直接下 DMG
 
-到 [Releases](https://github.com/xlyang/豆藏/releases/latest) 下载：
+到 [Releases](https://github.com/Xlyang18/doucang/releases/latest) 下载：
 
-- Apple 芯片（M 系列）→ `豆藏-x.y.z-arm64.dmg`
-- Intel 芯片 → `豆藏-x.y.z-x64.dmg`
+- Apple 芯片（M 系列）→ `doucang-x.y.z-arm64.dmg`
+- Intel 芯片 → `doucang-x.y.z-x64.dmg`
 
 > **首次打开**：应用没有做 Apple 公证，双击会被拦。请**右键点应用 → 打开**，或执行：
 > ```bash
@@ -149,8 +149,8 @@ Excel 6 个工作表；「美式豆册」A4 两列排版，每袋一张卡，打
 ### 从源码跑
 
 ```bash
-git clone https://github.com/xlyang/豆藏.git
-cd 豆藏
+git clone https://github.com/Xlyang18/doucang.git
+cd doucang
 
 # 推荐 pnpm（仓库根有 pnpm-workspace.yaml + .npmrc hoisted 配置）
 pnpm install
