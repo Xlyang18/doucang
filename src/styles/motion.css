@@ -1,0 +1,334 @@
+/* ===========================================================
+   豆藏 · 交互动效层（v2.1）
+   遵循 Apple HIG / 系统 App 的手感约定：
+   · 时长分级：微交互 120–180ms、状态切换 200–240ms、页面转场 280–320ms
+   · 曲线用「先快后缓」的减速曲线（进入）与「先缓后快」的加速曲线（离场），
+     不用回弹（bouncy）曲线做常规交互；仅"弹出"类（菜单/提示）允许轻微回弹
+   · 只用 transform / opacity 做动画（GPU 合成），绝不 animate width/height/top/left
+   · 所有动画尊重 prefers-reduced-motion：系统开了减弱动态效果就整体切静态
+   =========================================================== */
+
+:root {
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);        /* 进入 · 减速 */
+  --ease-in: cubic-bezier(0.55, 0.06, 0.68, 0.19);      /* 离场 · 加速 */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);          /* 位移 / 尺寸变化 */
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);     /* 仅用于弹出层，轻微回弹 */
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 240ms;
+  --dur-4: 300ms;
+}
+
+/* ---------- 全局：按下反馈（Apple 的 pressed 状态是「稍微变暗 + 缩 0.2%」，不是变亮） ---------- */
+.btn, .icon-btn, .nav-item, .seg-btn, .tab, .stepper, .qbrew-main, .qbrew-more,
+.recommend-card .rc-open, .toast-action, .qbrew-pop-item, .star {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active,
+.icon-btn:active,
+.nav-item:active,
+.seg-btn:active,
+.tab:active,
+.stepper:active,
+.recommend-card .rc-open:active {
+  transform: scale(0.975);
+  transition-duration: 60ms;
+}
+
+.btn, .icon-btn, .nav-item, .seg-btn, .tab, .stepper {
+  transition: transform var(--dur-1) var(--ease-out),
+              background-color var(--dur-2) var(--ease-out),
+              box-shadow var(--dur-2) var(--ease-out),
+              color var(--dur-2) var(--ease-out),
+              border-color var(--dur-2) var(--ease-out);
+}
+
+/* ---------- 页面转场：淡入 + 8px 上浮；离场不加（避免闪白） ---------- */
+.page { animation: pageIn var(--dur-4) var(--ease-out) both; }
+@keyframes pageIn {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* ---------- 侧栏导航：选中滑块用 ::before 做位移，而不是瞬间换背景 ---------- */
+.nav-item { position: relative; overflow: hidden; }
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--nav-active);
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-3) var(--ease-out);
+  pointer-events: none;
+}
+.nav-item.active::before { opacity: 1; transform: scale(1); }
+.nav-item > * { position: relative; z-index: 1; }
+.nav-item .nav-badge { transition: transform var(--dur-3) var(--ease-spring); }
+
+/* ---------- 分段控件：选中项背景滑过去 ---------- */
+.seg { position: relative; }
+.seg-btn { position: relative; z-index: 1; }
+.seg-btn.active { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04); }
+
+/* ---------- 卡片：悬停细微抬升 + 按下回弹 ---------- */
+.bean-card, .recommend-card, .stat-card, .panel, .wish-card {
+  transition: transform var(--dur-2) var(--ease-out),
+              box-shadow var(--dur-3) var(--ease-out),
+              border-color var(--dur-2) var(--ease-out);
+  will-change: transform;
+}
+.bean-card:hover, .recommend-card:hover, .wish-card:hover {
+  transform: translate3d(0, -2px, 0);
+}
+.bean-card:active, .recommend-card:active, .wish-card:active {
+  transform: scale(0.99);
+  transition-duration: 70ms;
+}
+
+/* ---------- 弹窗：遮罩淡入 + 面板从 96% 放大到 100%（Apple 的 sheet 感） ---------- */
+.modal-overlay { animation: overlayIn var(--dur-2) var(--ease-out) both; }
+.modal-overlay.closing { animation: overlayOut var(--dur-2) var(--ease-in) both; }
+.modal { animation: sheetIn var(--dur-4) var(--ease-out) both; }
+.modal-overlay.closing .modal { animation: sheetOut var(--dur-2) var(--ease-in) both; }
+
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlayOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes sheetIn {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.965); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes sheetOut {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.985); }
+}
+
+/* ---------- 提示条：从底部上滑 + 轻微回弹，离开时下沉淡出 ---------- */
+.toast {
+  animation: toastIn var(--dur-4) var(--ease-spring) both;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.96); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+.toast-action {
+  margin-left: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+.toast-action:hover { background: rgba(255, 255, 255, 0.26); }
+.toast-action:active { transform: scale(0.95); }
+
+/* ---------- 进度条 / 余量条：数值变化用宽度但加缓动，并给一次"闪一下" ---------- */
+.meter-fill, .usage-fill {
+  transition: width var(--dur-4) var(--ease-in-out);
+}
+.bean-usage.updated .usage-fill,
+.meter.updated .meter-fill {
+  animation: barPulse 620ms var(--ease-out);
+}
+@keyframes barPulse {
+  0%   { filter: brightness(1); }
+  35%  { filter: brightness(1.22); }
+  100% { filter: brightness(1); }
+}
+
+/* ---------- 数字变化：淡入替换（不跳字体宽度） ---------- */
+.num-swap { animation: numSwap var(--dur-3) var(--ease-out); }
+@keyframes numSwap {
+  from { opacity: 0; transform: translate3d(0, 4px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- 列表项进入：错峰淡入（仅一次，减少重复动画的烦躁感） ---------- */
+.card-grid > * { animation: itemIn var(--dur-4) var(--ease-out) both; }
+.card-grid > *:nth-child(1) { animation-delay: 0ms; }
+.card-grid > *:nth-child(2) { animation-delay: 24ms; }
+.card-grid > *:nth-child(3) { animation-delay: 48ms; }
+.card-grid > *:nth-child(4) { animation-delay: 72ms; }
+.card-grid > *:nth-child(n+5) { animation-delay: 90ms; }
+@keyframes itemIn {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- 快记按钮（v2.1） ---------- */
+.qbrew { position: relative; display: inline-flex; align-items: stretch; }
+.qbrew-block { display: flex; width: 100%; }
+.qbrew-main {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 9px 0 0 9px;
+  border: 1px solid transparent; border-right: none;
+  background: var(--accent); color: #fff;
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--dur-1) var(--ease-out), background-color var(--dur-2) var(--ease-out), filter var(--dur-2) var(--ease-out);
+  position: relative; overflow: hidden;
+}
+.qbrew-main:hover { filter: brightness(1.06); }
+.qbrew-main:active, .qbrew-main.pressed { transform: scale(0.97); filter: brightness(0.92); }
+.qbrew-main:disabled { opacity: 0.4; cursor: default; transform: none; }
+.qbrew-grams {
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px; padding: 1px 5px; font-size: 11px;
+}
+.qbrew-text { white-space: nowrap; }
+.qbrew-more {
+  width: 22px; border-radius: 0 9px 9px 0; border: 1px solid transparent;
+  background: var(--accent); color: #fff; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform var(--dur-1) var(--ease-out), filter var(--dur-2) var(--ease-out);
+}
+.qbrew-more:hover { filter: brightness(1.06); }
+.qbrew-more:active { transform: scale(0.94); }
+.qbrew-more:disabled { opacity: 0.4; cursor: default; }
+.qbrew-more svg { transition: transform var(--dur-3) var(--ease-out); }
+.qbrew.is-open .qbrew-more svg { transform: rotate(180deg); }
+.qbrew-sm .qbrew-main { font-size: 12px; padding: 5px 9px; }
+.qbrew-md .qbrew-main { font-size: 13px; padding: 8px 12px; }
+.qbrew-md .qbrew-more { width: 26px; }
+.qbrew-block .qbrew-main { flex: 1; justify-content: center; }
+
+/* 按下时从按钮中心扩散的高光（一次，140ms） */
+.qbrew-main .qbrew-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.55), transparent 62%);
+  opacity: 0; transform: scale(0.4);
+}
+.qbrew-main:active .qbrew-glow { animation: glowPop 420ms var(--ease-out); }
+@keyframes glowPop {
+  0% { opacity: 0.85; transform: scale(0.35); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* 记完飘起的小提示（"18g 意式"） */
+.qbrew-float {
+  position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px;
+  transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 99px;
+  background: rgba(28, 28, 30, 0.88); color: #fff;
+  font-size: 11px; white-space: nowrap; pointer-events: none;
+  animation: floatUp 760ms var(--ease-out) forwards;
+}
+@keyframes floatUp {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(4px) scale(0.9); }
+  18%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(1); }
+}
+
+/* 防误触：60 秒内重复点击时，在按钮旁就地确认（不走 toast，避免弹窗堆叠） */
+.qbrew-guard {
+  position: absolute; bottom: calc(100% + 8px); right: 0; z-index: 60;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 9px 7px 12px; border-radius: 11px;
+  background: rgba(28, 28, 30, 0.94); color: #fff;
+  font-size: 12px; white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  transform-origin: bottom right;
+  animation: guardIn 180ms var(--ease-spring) both;
+}
+@keyframes guardIn {
+  from { opacity: 0; transform: scale(0.92) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.qbrew-guard button {
+  border: none; border-radius: 7px; padding: 4px 9px;
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: background-color 140ms var(--ease-out), transform 100ms var(--ease-out);
+}
+.qbrew-guard button:active { transform: scale(0.94); }
+.qg-yes { background: #fff; color: #1d1d1f; }
+.qg-yes:hover { background: #f0f0f2; }
+.qg-no { background: rgba(255,255,255,0.16); color: #fff; }
+.qg-no:hover { background: rgba(255,255,255,0.26); }
+
+/* 方案选择浮层（Portal，挂在 body） */
+.qbrew-pop {
+  position: fixed; z-index: 4000;
+  min-width: 176px; padding: 5px;
+  border-radius: 12px;
+  background: var(--card-solid);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  transform-origin: top left;
+  animation: popIn var(--dur-3) var(--ease-spring) both;
+}
+:root[data-theme="dark"] .qbrew-pop { box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55), 0 0 0 0.5px rgba(255, 255, 255, 0.08); }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.qbrew-pop-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 7px 10px; border: none; border-radius: 8px;
+  background: transparent; color: var(--text);
+  font-family: inherit; font-size: 12.5px; cursor: pointer; text-align: left;
+  animation: itemFade var(--dur-2) var(--ease-out) both;
+  transition: background-color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+@keyframes itemFade { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+.qbrew-pop-item:hover { background: var(--nav-hover); }
+.qbrew-pop-item:active { transform: scale(0.985); }
+.qp-label { flex: 1; }
+.qp-grams { font-variant-numeric: tabular-nums; color: var(--text-2); }
+.qp-tag { font-size: 10px; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 0 6px; }
+.qbrew-pop-item.is-default .qp-label { font-weight: 600; }
+.qbrew-pop-foot {
+  margin: 4px 4px 2px; padding-top: 6px; border-top: 1px solid var(--border);
+  font-size: 10.5px; color: var(--text-3); line-height: 1.4;
+}
+
+/* 首页推荐卡：整卡不再可点，改成头部可点，按钮独立 */
+.recommend-card { cursor: default; }
+.recommend-card .rc-open {
+  background: none; border: none; padding: 0; text-align: left;
+  font-family: inherit; color: inherit; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.recommend-card .rc-open:hover { opacity: 0.82; }
+/* 推荐卡底部：价格信息与快记按钮同一行，按钮靠右不被拉满 */
+.recommend-card .rc-foot { margin-bottom: 2px; }
+.recommend-card > .qbrew { align-self: flex-end; }
+.recommend-card > .qbrew .qbrew-main { padding: 5px 9px; }
+
+/* 详情内快记行 */
+.detail-quick {
+  display: flex; align-items: center; gap: 8px; margin: 10px 0 4px;
+}
+.detail-quick .qbrew { flex: 1; }
+.detail-exact { flex: 0 0 auto; }
+
+/* 补记：用上次参数 */
+.brew-apply-last {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: -2px 0 10px; padding: 5px 10px;
+  border-radius: 8px; border: 1px dashed var(--border);
+  background: transparent; color: var(--text-2);
+  font-family: inherit; font-size: 12px; cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+.brew-apply-last:hover { background: var(--nav-hover); color: var(--text); }
+.brew-apply-last:active { transform: scale(0.98); }
+
+/* ---------- 减弱动态效果：全部降级为即时 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
