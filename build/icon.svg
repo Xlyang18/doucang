@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7A5230"/>
+      <stop offset="0.55" stop-color="#4E311B"/>
+      <stop offset="1" stop-color="#2B1810"/>
+    </linearGradient>
+    <linearGradient id="beanL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EBB983"/>
+      <stop offset="1" stop-color="#C98A54"/>
+    </linearGradient>
+    <linearGradient id="beanR" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B97C44"/>
+      <stop offset="1" stop-color="#8F5728"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect x="28" y="28" width="968" height="968" rx="220" fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="4"/>
+  <ellipse cx="512" cy="540" rx="290" ry="330" fill="#000" opacity="0.18"/>
+  <path d="M512 205 C 396 205 288 330 288 512 C 288 694 396 819 512 819 C 480 700 470 620 470 512 C 470 404 480 324 512 205 Z" fill="url(#beanL)"/>
+  <path d="M512 205 C 628 205 736 330 736 512 C 736 694 628 819 512 819 C 544 700 554 620 554 512 C 554 404 544 324 512 205 Z" fill="url(#beanR)"/>
+  <ellipse cx="428" cy="392" rx="62" ry="100" fill="url(#sheen)" transform="rotate(-18 428 392)"/>
+</svg>
