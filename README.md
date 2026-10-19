@@ -10,7 +10,7 @@
 
 数据 100% 保存在本机，不联网、不上传、不注册。
 
-[![Latest Release](https://img.shields.io/github/v/release/Xlyang18/doucang?color=c08a5d&label=release)](https://github.com/Xlyang18/doucang/releases/latest)
+[[![Latest Release](https://img.shields.io/github/v/release/Xlyang18/doucang?color=c08a5d&label=release)](https://github.com/Xlyang18/doucang/releases/latest)](https://github.com/Xlyang18/doucang/releases/latest)
 ![Platform](https://img.shields.io/badge/platform-macOS%2011%2B-black)
 ![Tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -122,6 +122,12 @@
 ### 📤 导出 Excel / 打印豆册
 
 Excel 6 个工作表；「美式豆册」A4 两列排版，每袋一张卡，打印或存 PDF。
+
+### 📜 更新日志
+
+应用里还有一页更新日志，时间轴记录每个版本改了什么。想不起来上次更新了啥，点开看看 (๑•̀ㅂ•́)✧
+
+![更新日志](docs/screenshots/14-changelog.png)
 
 ### 🌙 深浅色
 
