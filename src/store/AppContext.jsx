@@ -19,7 +19,13 @@ function blankData() {
 
 export function AppProvider({ children }) {
   const [data, setData] = useState(null);
-  const [page, setPage] = useState('home');
+  // 预览/调试：URL 带 ?page=xxx 可直达指定页；正式环境无此参数，行为不变
+  const [page, setPage] = useState(() => {
+    try {
+      const q = new URLSearchParams(window.location.search).get('page');
+      return q || 'home';
+    } catch (e) { return 'home'; }
+  });
   const [pageParam, setPageParam] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [resolvedTheme, setResolvedTheme] = useState('light');
