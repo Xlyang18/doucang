@@ -20,8 +20,8 @@
 ## 提 PR
 
 ```bash
-git clone https://github.com/xlyang/豆藏.git
-cd 豆藏
+git clone https://github.com/Xlyang18/doucang.git
+cd doucang
 pnpm install
 
 # 改完提交前，这三条必须过
@@ -85,7 +85,7 @@ pnpm dist
 codesign -dv release/mac-arm64/豆藏.app 2>&1 | grep CodeDirectory
 
 # 2. 挂载 DMG 实跑
-hdiutil attach release/豆藏-2.1.0-arm64.dmg -nobrowse -mountpoint /tmp/dcverify
+hdiutil attach release/doucang-2.1.0-arm64.dmg -nobrowse -mountpoint /tmp/dcverify
 open "/tmp/dcverify/豆藏.app"
 sleep 10
 curl -s http://127.0.0.1:47823/status   # 应返回 {"ok":true,...}
@@ -111,15 +111,15 @@ git push origin v2.2.0
 
 ```bash
 gh release create v2.2.0 \
-  "release/豆藏-2.2.0-arm64.dmg" \
-  "release/豆藏-2.2.0-x64.dmg" \
+  "release/doucang-2.2.0-arm64.dmg" \
+  "release/doucang-2.2.0-x64.dmg" \
   --title "豆藏 v2.2.0" \
   --notes-file /tmp/release-notes.md
 ```
 
 `/tmp/release-notes.md` 内容直接从 `CHANGELOG.md` 对应版本段落复制。
 
-> 标签名统一 `vX.Y.Z`（带 v），文件名用 `豆藏-X.Y.Z-<arch>.dmg`。
+> 标签名统一 `vX.Y.Z`（带 v），文件名用 `doucang-X.Y.Z-<arch>.dmg`（ASCII，中文名会被 GitHub 过滤掉字符）。
 
 ### 八、收尾
 
