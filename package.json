@@ -1,0 +1,84 @@
+{
+  "name": "doucang",
+  "productName": "豆藏",
+  "version": "2.1.0",
+  "description": "豆藏 - 咖啡豆记录与管理：豆仓、冲煮记录、统计、OCR 识标签、链接导入、Excel 与豆册导出",
+  "author": "DouCang",
+  "license": "MIT",
+  "type": "module",
+  "main": "electron/main.mjs",
+  "scripts": {
+    "dev": "vite build && electron .",
+    "build": "vite build",
+    "preview": "vite build && node scripts/make-preview.cjs",
+    "test": "node --test tests/*.test.mjs",
+    "smoke": "node scripts/smoke.cjs",
+    "check": "bash scripts/check.sh",
+    "icons:ext": "node scripts/gen-extension-icons.cjs",
+    "dist": "vite build && electron-builder --mac dmg --x64 --arm64 --config.afterSign=scripts/after-sign.cjs",
+    "dist:dir": "vite build && electron-builder --mac dir --arm64 --config.afterSign=scripts/after-sign.cjs"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.4.11"
+  },
+  "build": {
+    "appId": "com.doucang.app",
+    "productName": "豆藏",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "src/lib/*.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "extension",
+        "to": "extension"
+      }
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.lifestyle",
+      "icon": "build/icon.icns",
+      "identity": null
+    },
+    "dmg": {
+      "title": "豆藏",
+      "iconSize": 100,
+      "contents": [
+        {
+          "x": 140,
+          "y": 200
+        },
+        {
+          "x": 400,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "artifactName": "豆藏-${version}-${arch}.dmg"
+    }
+  }
+}
