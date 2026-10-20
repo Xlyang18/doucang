@@ -115,7 +115,10 @@ function brewingsOf(bean = {}) {
 }
 
 function usedGrams(bean = {}) {
-  if (bean.finished && numOrNull(bean.finishedWeight) > 0) return Number(bean.finishedWeight);
+  const total = Number(bean.totalWeight) || 0;
+  const fw = numOrNull(bean.finishedWeight);
+  // finishedWeight = 喝完时剩余克数，不是已用量
+  if (bean.finished && fw != null && fw >= 0) return Math.max(0, total - fw);
   return brewingsOf(bean).reduce((s, b) => s + (Number(b.grams) || 0), 0);
 }
 
