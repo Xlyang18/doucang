@@ -22,6 +22,34 @@ export function presetMeta(method, settings) {
   return { method, label: methodLabel(method), grams: g, ratio: RATIO[method] || '' };
 }
 
+
+/**
+ * 快记主按钮用哪个方案，优先级：
+ *   1. 设置里指定的全局默认（settings.defaultMethod）
+ *   2. 这袋豆子自己的冲煮方式（brewMethod）
+ *   3. 历史里最常用的一档
+ *   4. 手冲兜底
+ * @returns {{method:string, source:'setting'|'bean'|'history'|'fallback'}}
+ */
+export function resolveDefaultMethod(bean = {}, settings = {}) {
+  const VALID = ['pour', 'espresso', 'immersion'];
+  const fromSetting = settings.defaultMethod;
+  if (VALID.includes(fromSetting)) {
+    return { method: fromSetting, source: 'setting' };
+  }
+  if (VALID.includes(bean.brewMethod)) {
+    return { method: bean.brewMethod, source: 'bean' };
+  }
+  const counts = {};
+  for (const br of bean.brewings || []) {
+    const m = br.method || 'pour';
+    counts[m] = (counts[m] || 0) + 1;
+  }
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  if (top) return { method: top[0], source: 'history' };
+  return { method: 'pour', source: 'fallback' };
+}
+
 /** 该豆当前默认方案：以豆子设定的冲煮方式为准；历史里更常用的那一档超过它两次以上才替换 */
 export function defaultMethodFor(bean = {}) {
   const base = bean.brewMethod || 'pour';
