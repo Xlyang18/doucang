@@ -7,6 +7,7 @@ import { formatMoney, formatNum } from '../lib/format.js';
 import { normalizeBean } from '../lib/dedup.js';
 import { Modal, ConfirmDialog, EmptyState, Segmented, Stars, Field, Meter, Tabs, PageHead, Panel } from '../components/ui.jsx';
 import BeanFormModal from '../components/BeanFormModal.jsx';
+import Sticker from '../components/Sticker.jsx';
 import QuickBrewButton from '../components/QuickBrewButton.jsx';
 import ImportCapture from './ImportCapture.jsx';
 import { takePendingPrefill, peekPendingPrefill } from '../lib/prefill.js';
@@ -38,6 +39,8 @@ export default function BeansPage() {
   const [detailId, setDetailId] = useState(null);
   const [delTarget, setDelTarget] = useState(null);
   const [brewTarget, setBrewTarget] = useState(null);
+  // C4：记录被点卡片的屏幕位置，让详情从这里「长出来」
+  const [detailOrigin, setDetailOrigin] = useState(null);
   const [reorder, setReorder] = useState(null);
 
   /* 页面参数：'add' / { detail } / { brew } / 'brews'
@@ -95,7 +98,16 @@ export default function BeansPage() {
   return (
     <div className="page-inner">
       <PageHead
-        title="豆仓"
+        title={(
+          <span className="head-with-sticker">
+            豆仓
+            <span className="head-sticker">
+              <Sticker name="bean" size={40} rotate={-10} />
+              <Sticker name="grinder" size={40} rotate={6} />
+              <Sticker name="leaf" size={32} rotate={12} />
+            </span>
+          </span>
+        )}
         sub={`现在拥有的豆子 · ${beans.filter((b) => !b.finished).length} 袋在喝 · ${allBrews.length} 杯记录`}
         actions={
           <>
@@ -157,7 +169,7 @@ export default function BeansPage() {
                     <BeanCard
                       key={b.id}
                       bean={b}
-                      onOpen={() => setDetailId(b.id)}
+                      onOpen={(rect) => { setDetailOrigin(rect); setDetailId(b.id); }}
                       onBrew={() => setBrewTarget(b.id)}
                       onEdit={() => setForm({ bean: b })}
                     />
@@ -185,7 +197,7 @@ export default function BeansPage() {
                     return (
                       <tr key={br.id}>
                         <td>{br.date}</td>
-                        <td className="link-cell" onClick={() => { setTab('beans'); setDetailId(bean.id); }}>
+                        <td className="link-cell" onClick={(e) => { setTab('beans'); setDetailOrigin(e.currentTarget.getBoundingClientRect()); setDetailId(bean.id); }}>
                           {bean.brand ? `${bean.brand} · ` : ''}{bean.name}
                         </td>
                         <td>{methodLabel(br.method)}</td>
@@ -232,6 +244,7 @@ export default function BeansPage() {
 
       <BeanDetailModal
         bean={detail}
+        origin={detailOrigin}
         onClose={() => setDetailId(null)}
         onEdit={(b) => { setDetailId(null); setForm({ bean: b }); }}
         onFinish={(b) => { finishBean(b.id); setDetailId(null); toast(`「${b.name}」已标记喝完`); }}
@@ -301,7 +314,10 @@ function BeanCard({ bean, onOpen, onBrew, onEdit }) {
   const pct = s.total ? (s.left / s.total) * 100 : 0;
 
   return (
-    <div className={`bean-card status-${s.status}`} onClick={onOpen}>
+    <div
+      className={`bean-card status-${s.status}`}
+      onClick={(e) => onOpen(e.currentTarget.getBoundingClientRect())}
+    >
       <div className="bean-head">
         <div className="bean-id">
           <span className="bean-brand">{bean.brand || '未知品牌'}</span>
@@ -341,7 +357,7 @@ function BeanCard({ bean, onOpen, onBrew, onEdit }) {
         </div>
         <div className="card-actions" onClick={(e) => e.stopPropagation()}>
           {!bean.finished && s.left > 0 && (
-            <QuickBrewButton bean={bean} defaultMethod={bean.brewMethod || 'pour'} size="sm" />
+            <QuickBrewButton bean={bean} size="sm" />
           )}
           <button className="icon-btn" onClick={onEdit} aria-label="编辑" title="编辑"><Icon name="pencil" size={14} /></button>
         </div>
@@ -451,7 +467,7 @@ function BrewModal({ bean, onClose, onSave }) {
 }
 
 /* ================= Detail Modal ================= */
-function BeanDetailModal({ bean, onClose, onEdit, onFinish, onRestore, onDelete, onBrew, onAfterQuickLog, onRemoveBrewing, onRebuy, onReorder }) {
+function BeanDetailModal({ bean, origin, onClose, onEdit, onFinish, onRestore, onDelete, onBrew, onAfterQuickLog, onRemoveBrewing, onRebuy, onReorder }) {
   const { data } = useApp();
   // 父层每次都传新函数，直接往下传会把 QuickBrewButton 里 ref 读取时机打乱 → 用 ref 固定住
   const afterLogRef = React.useRef(onAfterQuickLog);
@@ -469,6 +485,7 @@ function BeanDetailModal({ bean, onClose, onEdit, onFinish, onRestore, onDelete,
       onClose={onClose}
       title="豆子详情"
       width={660}
+      origin={origin}
       footer={
         <>
           <button className="btn btn-ghost danger-text" onClick={() => onDelete(bean)}>
@@ -514,7 +531,7 @@ function BeanDetailModal({ bean, onClose, onEdit, onFinish, onRestore, onDelete,
       {/* 详情内一条「快记」：看清豆子顺手就能记，不必退出 */}
       {!bean.finished && (
         <div className="detail-quick">
-          <QuickBrewButton bean={bean} defaultMethod={bean.brewMethod || 'pour'} size="md" block label="喝一杯" onLogged={afterQuickLog} />
+          <QuickBrewButton bean={bean} size="md" block label="喝一杯" onLogged={afterQuickLog} />
           <button className="btn btn-sm btn-ghost detail-exact" onClick={() => onBrew(bean)} title="精确录入克数、日期、粉水比与心得">
             <Icon name="edit" size={13} /> 精确记录
           </button>
