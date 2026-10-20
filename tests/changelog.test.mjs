@@ -83,3 +83,23 @@ test('更新日志：最新一条的版本号与 package.json 一致', async () 
   assert.equal(newest.version, pkg.version,
     `最新日志是 ${newest.version}，但 package.json 是 ${pkg.version}——发版时忘写日志了？`);
 });
+
+/* ---------- 默认冲煮方案的数据兼容 ---------- */
+
+test('迁移：旧数据没有 defaultMethod 时自动补 pour', async () => {
+  const { migrate } = await import('../src/lib/schema.mjs');
+  const r = migrate({ schemaVersion: 2, settings: { pourGrams: 15, espressoGrams: 18 }, beans: [], wishlist: [] });
+  assert.equal(r.data.settings.defaultMethod, 'pour');
+});
+
+test('迁移：已有的合法 defaultMethod 不会被覆盖', async () => {
+  const { migrate } = await import('../src/lib/schema.mjs');
+  const r = migrate({ schemaVersion: 2, settings: { defaultMethod: 'espresso' }, beans: [], wishlist: [] });
+  assert.equal(r.data.settings.defaultMethod, 'espresso');
+});
+
+test('迁移：非法 defaultMethod 回落到 pour，不会留下脏值', async () => {
+  const { migrate } = await import('../src/lib/schema.mjs');
+  const r = migrate({ schemaVersion: 2, settings: { defaultMethod: 'latte' }, beans: [], wishlist: [] });
+  assert.equal(r.data.settings.defaultMethod, 'pour');
+});
