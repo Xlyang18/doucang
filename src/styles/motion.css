@@ -332,3 +332,25 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ===========================================================
+   C4 · 共享元素过渡
+   弹窗从被点卡片的位置「长出来」：起点用 inline transform 写在元素上，
+   下一帧撤掉，靠 transition 回到自然位置。
+   =========================================================== */
+
+.modal.is-morphing {
+  transition: transform 320ms var(--ease-out), opacity 320ms var(--ease-out);
+  will-change: transform;
+}
+
+/* 过渡期间内容先压暗一点，避免文字在缩放时糊掉 */
+.modal.is-morphing .modal-body {
+  opacity: 0.35;
+  transition: opacity 200ms var(--ease-out);
+}
+
+/* 撤销 morph 后内容淡回来 */
+.modal .modal-body {
+  transition: opacity 240ms var(--ease-out) 80ms;
+}
