@@ -1,0 +1,70 @@
+/* ===========================================================
+   豆藏 · 层级体系（v2.4）
+   过去各组件各自写 z-index，导致多个弹窗同为 100 而互相覆盖。
+   这里改成统一的语义化层级，数值留足间隔方便插层。
+
+   规则：
+   · 数值越小越「在里面」，越大越「浮在上面」
+   · 同一层级的元素不得互相覆盖（需要上限就换下一档）
+   · 遮罩与面板成对出现，外层高一层
+   =========================================================== */
+
+:root {
+  --z-base: 0;           /* 常规内容 */
+  --z-noise: 1;          /* 噪点纹理（不拦截点击） */
+  --z-content: 2;        /* 页面内容 */
+  --z-sticky: 10;        /* 吸顶元素 */
+  --z-drag: 30;          /* 窗口拖拽区 */
+  --z-popover: 60;       /* 下拉 / 弹层（QuickBrew 菜单、建议列表） */
+  --z-toast: 200;        /* Toast 提示 */
+
+  /* 弹窗栈：按层递增，每层差 10，给遮罩留位 */
+  --z-modal-1: 300;      /* 第一层弹窗遮罩 */
+  --z-modal-1-panel: 310;
+  --z-modal-2: 400;      /* 第二层（如详情里的确认对话框） */
+  --z-modal-2-panel: 410;
+  --z-modal-3: 500;      /* 预留第三层 */
+  --z-modal-3-panel: 510;
+
+  --z-fixed-ui: 4000;    /* 固定浮层（.qbrew-pop 等） */
+}
+
+/* ---------- 落地 ---------- */
+
+.main::after { z-index: var(--z-noise); }
+.main > * { z-index: var(--z-content); }
+
+.dropdown,
+.tag-suggest,
+.suggest-list { z-index: var(--z-popover); }
+
+.toast-host { z-index: var(--z-toast); }
+
+/* 第一层弹窗 */
+.modal-overlay { z-index: var(--z-modal-1); }
+.modal-overlay > .modal { position: relative; z-index: var(--z-modal-1-panel); }
+
+/* 第二层弹窗：确认框永远比详情高一层。
+   不依赖 :has()（Safari 15 以下不支持），由组件直接打 confirm-overlay 类。 */
+.modal-overlay.confirm-overlay { z-index: var(--z-modal-2); }
+.modal-overlay.confirm-overlay > .modal { z-index: var(--z-modal-2-panel); }
+
+/* 被压住的底层弹窗：变暗、禁止交互，避免误点 */
+.modal-overlay.is-behind {
+  pointer-events: none;
+  filter: saturate(0.9);
+}
+.modal-overlay.is-behind::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  z-index: -1;
+}
+
+/* 弹层（QuickBrew 菜单）永远高于普通内容但低于弹窗 */
+.qbrew-pop { z-index: var(--z-fixed-ui); }
+.qbrew-guard { z-index: 61; }
+
+/* 侧栏与主区：侧栏不参与弹窗叠加 */
+.sidebar { z-index: var(--z-sticky); }
