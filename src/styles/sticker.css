@@ -1,0 +1,138 @@
+/* ===========================================================
+   豆藏 · 视觉升级层（v2.3）
+   A2 状态徽章贴纸化 · A3 图标微立体 · A5 极淡噪点
+
+   设计原则（遵循 Apple HIG）：
+   · 贴纸感来自「白描边 + 一层柔和投影 + 极小旋转」，不是重描边卡通
+   · 描边与投影在深色模式下需要重新取值，不能直接复用浅色的白
+   · 旋转角度控制在 -1° ~ 1°，超过就变成"歪"，不是"趣味"
+   · 噪点用 SVG feTurbulence 内联，不引入图片，体积可忽略
+   =========================================================== */
+
+:root {
+  /* 贴纸：白描边 */
+  --sticker-ring: #FFFFFF;
+  --sticker-ring-w: 2px;
+  --sticker-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 4px 14px rgba(0, 0, 0, 0.10);
+  --sticker-shadow-hover: 0 2px 0 rgba(0, 0, 0, 0.05), 0 8px 22px rgba(0, 0, 0, 0.14);
+
+  /* 图标微立体 */
+  --icon-hi: rgba(255, 255, 255, 0.9);
+  --icon-lo: rgba(0, 0, 0, 0.06);
+}
+
+:root[data-theme="dark"] {
+  /* 深色下白描边改为浅灰描边，否则刺眼 */
+  --sticker-ring: rgba(255, 255, 255, 0.14);
+  --sticker-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.42);
+  --sticker-shadow-hover: 0 2px 0 rgba(0, 0, 0, 0.4), 0 10px 26px rgba(0, 0, 0, 0.55);
+  --icon-hi: rgba(255, 255, 255, 0.24);
+  --icon-lo: rgba(0, 0, 0, 0.35);
+}
+
+/* ===========================================================
+   A2 · 状态徽章贴纸化
+   保持原 .badge 的语义类名（badge-orange/green/red/gray），只换外观
+   =========================================================== */
+
+.badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px 3px 8px;
+  border-radius: 99px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  border: var(--sticker-ring-w) solid var(--sticker-ring);
+  box-shadow: var(--sticker-shadow);
+  transition: transform var(--dur-2) var(--ease-spring),
+              box-shadow var(--dur-2) var(--ease-out);
+}
+
+/* 徽章上的小圆点，像贴纸上的印点 */
+.badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+  flex: 0 0 auto;
+}
+
+/* 悬停时轻轻抬起 —— 只对可交互容器内的徽章生效，避免列表整体乱动 */
+.recommend-card:hover .badge,
+.bean-card:hover .badge {
+  transform: translateY(-1px) rotate(-1deg);
+  box-shadow: var(--sticker-shadow-hover);
+}
+
+.badge-orange { background: #FFE8C7; color: #9A5B00; }
+.badge-green  { background: #D6F5E0; color: #17703A; }
+.badge-red    { background: #FFD9D6; color: #A62A20; }
+.badge-gray   { background: #ECECEE; color: #5C5C61; }
+.badge-accent { background: var(--accent-soft); color: var(--accent); }
+
+:root[data-theme="dark"] .badge-orange { background: rgba(255, 159, 10, 0.20); color: #FFB340; }
+:root[data-theme="dark"] .badge-green  { background: rgba(52, 199, 89, 0.20); color: #5BE08A; }
+:root[data-theme="dark"] .badge-red    { background: rgba(255, 69, 58, 0.20); color: #FF7A72; }
+:root[data-theme="dark"] .badge-gray   { background: rgba(142, 142, 147, 0.24); color: #B4B4B9; }
+
+/* 极小的入场弹出，配合状态变化 */
+.badge { animation: stickerPop var(--dur-3) var(--ease-spring) both; }
+@keyframes stickerPop {
+  from { opacity: 0; transform: scale(0.86) rotate(-2deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* ===========================================================
+   A3 · 图标微立体
+   给图标容器一层内高光 + 内阴影，产生"按下凸起"的物理感
+   =========================================================== */
+
+.nav-item svg,
+.stat-card .sc-icon svg,
+.feature-icon svg,
+.mc-icon svg,
+.btn-primary svg {
+  filter: drop-shadow(0 1px 0 var(--icon-hi)) drop-shadow(0 -0.5px 0 var(--icon-lo));
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+/* 图标底座：圆角方块带一层浅浮雕 */
+.sc-icon,
+.feature-icon,
+.mc-icon {
+  box-shadow: inset 0 1px 0 var(--icon-hi), inset 0 -1px 0 var(--icon-lo);
+}
+
+/* ===========================================================
+   A5 · 极淡噪点纹理
+   用内联 SVG feTurbulence，无外部图片，压缩后几乎不增加体积
+   =========================================================== */
+
+.main::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.028;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="dark"] .main::after {
+  opacity: 0.05;
+  mix-blend-mode: screen;
+}
+
+/* 噪点只铺在内容区背景，不盖住文字层次 */
+.main > * { position: relative; z-index: 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .badge, .main::after { animation: none !important; }
+}
