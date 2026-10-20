@@ -7,6 +7,7 @@ import { useApp } from '../store/AppContext.jsx';
 import { summarize, resolveBean, roastLabel, todayStr } from '../lib/calc.js';
 import { formatMoney, formatNum } from '../lib/format.js';
 import { PageHead, Panel, EmptyState, StatCard, Tabs, Meter } from '../components/ui.jsx';
+import Sticker from '../components/Sticker.jsx';
 import Icon from '../components/Icon.jsx';
 import {
   ROAST_COLORS, brandRanking, roastMatrix, flavorMatrix, monthlyFlow, recentMonths,
@@ -63,9 +64,9 @@ export default function StatsPage() {
 
   if (beans.length === 0) {
     return (
-      <div className="page-inner">
+      <div className="page-inner notebook-lines">
         <PageHead title="数据统计" sub="还没有数据" />
-        <EmptyState icon="chart" title="先记几袋豆子，这里才有东西可看" desc="添加豆子并记录几杯冲煮，统计页会自动生成。" action={<button className="btn btn-primary" onClick={() => go('beans')}>去添加豆子</button>} />
+        <EmptyState sticker="ruler" title="先记几袋豆子，这里才有东西可看" desc="添加豆子并记录几杯冲煮，统计页会自动生成。" action={<button className="btn btn-primary" onClick={() => go('beans')}>去添加豆子</button>} />
       </div>
     );
   }
@@ -73,7 +74,15 @@ export default function StatsPage() {
   return (
     <div className="page-inner">
       <PageHead
-        title="数据统计"
+        title={(
+          <span className="head-with-sticker">
+            数据统计
+            <span className="head-sticker">
+              <Sticker name="star" size={40} rotate={-8} />
+              <Sticker name="ruler" size={46} rotate={6} />
+            </span>
+          </span>
+        )}
         sub={`${sum.count} 袋 · ${sum.brewCount} 杯 · 截至 ${sum.today}`}
         actions={
           <button className="btn btn-primary" onClick={() => go('shared', { mode: 'season' })}>
