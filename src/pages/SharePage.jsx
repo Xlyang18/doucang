@@ -5,6 +5,7 @@ import { formatMoney } from '../lib/format.js';
 import { renderSharePng } from '../lib/shareCard.js';
 import { seasonSummary, ratingBoard } from '../lib/stats.js';
 import { PageHead, Panel, EmptyState, Segmented } from '../components/ui.jsx';
+import Sticker from '../components/Sticker.jsx';
 import Icon from '../components/Icon.jsx';
 
 /**
@@ -83,8 +84,8 @@ export default function SharePage() {
   if (beans.length === 0) {
     return (
       <div className="page-inner">
-        <PageHead title="分享与对比" />
-        <EmptyState icon="share" title="先记几袋豆子再分享" desc="有数据之后可以生成「本季我喝了什么」或单袋豆子卡片。" />
+        <PageHead title={<span className="head-with-sticker">分享与对比<span className="head-sticker"><Sticker name="cup" size={40} rotate={9} /></span></span>} />
+        <EmptyState sticker="cup" title="先记几袋豆子再分享" desc="有数据之后可以生成「本季我喝了什么」或单袋豆子卡片。" />
       </div>
     );
   }
@@ -92,7 +93,7 @@ export default function SharePage() {
   return (
     <div className="page-inner">
       <PageHead
-        title="分享与对比"
+        title={(<span className="head-with-sticker">分享与对比<span className="head-sticker"><Sticker name="cup" size={40} rotate={9} /></span></span>)}
         sub="生成图片发朋友圈、小红书，或把某只豆子推荐给朋友"
         actions={<button className="btn btn-primary" onClick={build} disabled={busy}><Icon name="sparkle" size={14} /> {busy ? '生成中…' : '生成卡片'}</button>}
       />
@@ -147,7 +148,7 @@ export default function SharePage() {
           </>
         ) : (
           <div className="share-empty">
-            <Icon name="share" size={26} />
+            <Icon name="share" size={40} />
             <p>点右上角「生成卡片」预览效果</p>
           </div>
         )}
