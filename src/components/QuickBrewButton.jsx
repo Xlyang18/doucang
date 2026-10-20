@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../store/AppContext.jsx';
 import { methodLabel } from '../lib/calc.js';
-import { presetGrams, buildQuickBrew, brewResultText, QUICK_DEDUPE_MS } from '../lib/quickBrew.js';
+import { presetGrams, buildQuickBrew, brewResultText, QUICK_DEDUPE_MS, resolveDefaultMethod } from '../lib/quickBrew.js';
 import Icon from './Icon.jsx';
 
 /**
@@ -11,7 +11,7 @@ import Icon from './Icon.jsx';
  * 小箭头 = 展开方案选择，用 Portal 挂到 body，永远不被卡片 overflow 裁切
  */
 export default function QuickBrewButton({
-  bean, defaultMethod = 'pour', size = 'sm', block = false,
+  bean, size = 'sm', block = false,
   onLogged, label = '喝一杯'
 }) {
   const { data, toast, logBrewing, undoBrewing, finishBean } = useApp();
@@ -20,11 +20,15 @@ export default function QuickBrewButton({
   const [dupGuard, setDupGuard] = useState(null);
   const [rect, setRect] = useState(null);
   const [flying, setFlying] = useState(null);
+  const [tilting, setTilting] = useState(false);
   const mainRef = useRef(null);
   const rootRef = useRef(null);
   const lastRef = useRef({ method: '', at: 0 });
 
   const grams = presetGrams(settings);
+  // 默认方案：设置的全局默认 > 豆子自身冲煮方式 > 历史习惯
+  const resolved = resolveDefaultMethod(bean || {}, settings);
+  const defaultMethod = resolved.method;
   const main = { method: defaultMethod, grams: grams[defaultMethod] };
   const disabled = !bean || bean.finished;
 
@@ -75,7 +79,8 @@ export default function QuickBrewButton({
       });
     }
     setFlying({ id: Date.now(), method, grams: built.grams });
-    setTimeout(() => setFlying(null), 760);
+    setTilting(true);
+    setTimeout(() => setFlightDone(), 760);
     if (onLogged) onLogged(built);
   };
 
@@ -92,13 +97,15 @@ export default function QuickBrewButton({
     doRecord(method);
   };
 
+  const setFlightDone = () => { setFlying(null); setTilting(false); };
+
   const methods = ['pour', 'espresso', 'immersion'];
 
   return (
     <div ref={rootRef} className={`qbrew ${block ? 'qbrew-block' : ''} qbrew-${size} ${open ? 'is-open' : ''}`}>
       <button
         ref={mainRef}
-        className="qbrew-main"
+        className={`qbrew-main ${tilting ? 'tilt' : ''}`}
         disabled={disabled}
         onMouseDown={(e) => { e.stopPropagation(); e.currentTarget.classList.add('pressed'); }}
         onMouseUp={(e) => e.currentTarget.classList.remove('pressed')}
@@ -110,6 +117,11 @@ export default function QuickBrewButton({
         <span className="qbrew-text">{label}</span>
         <span className="qbrew-grams">{main.grams}g</span>
         <span className="qbrew-glow" aria-hidden="true" />
+        <span className="qbrew-drops" aria-hidden="true">
+          <i style={{ '--dx': '-10px', '--dy': '11px', animationDelay: '0ms' }} />
+          <i style={{ '--dx': '-3px', '--dy': '14px', animationDelay: '60ms' }} />
+          <i style={{ '--dx': '5px', '--dy': '12px', animationDelay: '110ms' }} />
+        </span>
       </button>
       <button
         className="qbrew-more"
