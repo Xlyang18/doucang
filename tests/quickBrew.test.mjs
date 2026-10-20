@@ -105,3 +105,50 @@ test('一键记：冷萃用 immersionGrams', () => {
 test('双击去重窗口为 60 秒', () => {
   assert.equal(QUICK_DEDUPE_MS, 60000);
 });
+
+/* ---------- 默认冲煮方案（设置优先） ---------- */
+
+import { resolveDefaultMethod } from '../src/lib/quickBrew.js';
+
+test('默认方案：设置里选了意式，就用意式（覆盖豆子设定）', () => {
+  const r = resolveDefaultMethod({ brewMethod: 'pour' }, { defaultMethod: 'espresso' });
+  assert.equal(r.method, 'espresso');
+  assert.equal(r.source, 'setting');
+});
+
+test('默认方案：设置里选了冷萃，手冲豆也记冷萃', () => {
+  const r = resolveDefaultMethod({ brewMethod: 'pour' }, { defaultMethod: 'immersion' });
+  assert.equal(r.method, 'immersion');
+  assert.equal(r.source, 'setting');
+});
+
+test('默认方案：设置为空时回落到豆子自身冲煮方式', () => {
+  const r = resolveDefaultMethod({ brewMethod: 'espresso' }, {});
+  assert.equal(r.method, 'espresso');
+  assert.equal(r.source, 'bean');
+});
+
+test('默认方案：设置值非法时忽略，不崩溃', () => {
+  const r = resolveDefaultMethod({ brewMethod: 'pour' }, { defaultMethod: 'bogus' });
+  assert.equal(r.method, 'pour');
+  assert.equal(r.source, 'bean');
+});
+
+test('默认方案：豆子没设定时看历史习惯', () => {
+  const r = resolveDefaultMethod({ brewings: [{ method: 'espresso' }, { method: 'espresso' }] }, {});
+  assert.equal(r.method, 'espresso');
+  assert.equal(r.source, 'history');
+});
+
+test('默认方案：什么都没有时兜底手冲', () => {
+  const r = resolveDefaultMethod({}, {});
+  assert.equal(r.method, 'pour');
+  assert.equal(r.source, 'fallback');
+});
+
+test('默认方案：设置值优先于历史习惯', () => {
+  const bean = { brewings: [{ method: 'espresso' }, { method: 'espresso' }, { method: 'espresso' }] };
+  const r = resolveDefaultMethod(bean, { defaultMethod: 'pour' });
+  assert.equal(r.method, 'pour');
+  assert.equal(r.source, 'setting');
+});
