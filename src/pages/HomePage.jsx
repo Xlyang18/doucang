@@ -9,6 +9,8 @@ import { formatMoney, formatNum } from '../lib/format.js';
 import { StatCard, EmptyState, TripToggle, Panel, PageHead, Meter } from '../components/ui.jsx';
 import QuickBrewButton from '../components/QuickBrewButton.jsx';
 import Icon from '../components/Icon.jsx';
+import Gauge from '../components/Gauge.jsx';
+import Sticker from '../components/Sticker.jsx';
 import { ROAST_COLORS, seasonSummary } from '../lib/stats.js';
 
 function ChartTip({ active, payload, label, money = false }) {
@@ -84,6 +86,54 @@ function HomePageInner() {
 
   const season = useMemo(() => seasonSummary(beans, settings, todayStr()), [beans, settings]);
 
+  /* ---------- A4：库存健康度 ----------
+   * 口径：按「最近 30 天日均消耗」推算还能撑多少天，
+   * 13 天以内算偏少、14–30 天健康、30 天以上充裕。
+   * 没有冲煮记录时按零消耗处理，退化为「按袋数评估」。
+   */
+  const health = useMemo(() => {
+    const active = beans.filter((b) => !b.finished);
+    const stock = active.reduce((n, b) => n + Math.max(0, resolveBean(b, settings).left), 0);
+    let recent = 0;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    for (const b of beans) {
+      for (const br of b.brewings || []) {
+        if (br.date && new Date(br.date) >= cutoff) recent += Number(br.grams) || 0;
+      }
+    }
+    const perDay = recent / 30;
+    const days = perDay > 0 ? Math.round(stock / perDay) : null;
+    let pct;
+    if (days == null) {
+      // 无消耗数据：按在仓袋数评估，5 袋以上视为充裕
+      pct = Math.min(100, (active.length / 5) * 100);
+    } else {
+      pct = Math.min(100, (days / 45) * 100);
+    }
+    const urgent = [...active]
+      .map((b) => ({ b, s: resolveBean(b, settings) }))
+      .sort((x, y) => {
+        const rank = { past: 0, peak: 1, resting: 2, unknown: 3 };
+        const rx = rank[x.s.status] ?? 4;
+        const ry = rank[y.s.status] ?? 4;
+        if (rx !== ry) return rx - ry;
+        return (x.s.progress.days || 0) - (y.s.progress.days || 0);
+      })[0] || null;
+    return { pct, days, urgent };
+  }, [beans, settings]);
+
+  const healthPct = health.pct;
+  const daysLeft = health.days == null ? '—' : health.days;
+  const urgentBean = health.urgent;
+  const healthHint = health.days == null
+    ? '还没有冲煮记录，按在仓袋数估算'
+    : health.days <= 13
+      ? '库存偏紧，该补货了'
+      : health.days <= 30
+        ? '库存健康，够喝一阵'
+        : '相当充裕，从容挑着喝';
+
   const basisCard = basis === 'consumed'
     ? { label: '真实已花', value: formatMoney(sum.spentConsumed), sub: '按已喝掉的部分计 · 不含囤货' }
     : basis === 'all'
@@ -93,9 +143,9 @@ function HomePageInner() {
   const hasBeans = beans.length > 0;
 
   return (
-    <div className="home">
+    <div className="home notebook-lines">
       <PageHead
-        title="首页"
+        title={<span className="head-with-sticker">首页<span className="head-sticker"><Sticker name="bag" size={46} rotate={-4} /></span></span>}
         sub={`你的咖啡数据全景 · ${beans.length} 袋记录 · ${sum.brewCount} 杯冲煮`}
         actions={
           <>
@@ -114,7 +164,7 @@ function HomePageInner() {
 
       {!hasBeans ? (
         <EmptyState
-          icon="coffee"
+          sticker="cup"
           title="豆仓还是空的"
           desc="把手里这袋豆子收进来：贴个商品链接或拍张包装，养豆期、赏味期和花费都会自动算好。"
           action={
@@ -125,6 +175,37 @@ function HomePageInner() {
         />
       ) : (
         <>
+          {/* A4：库存健康度仪表盘 —— 一眼看清「还能喝多久」 */}
+          <section className="home-hero">
+            <div className="hero-gauge">
+              <span className="hero-sticker"><Sticker name="notebook" size={64} rotate={5} /></span>
+              <Gauge
+                value={healthPct}
+                center={`${sum.activeCount}`}
+                sub="袋在喝"
+                label="库存健康度"
+                size={176}
+              />
+              <p className="hero-hint">{healthHint}</p>
+            </div>
+            <div className="hero-facts">
+              <div className="fact">
+                <span className="fact-label">剩余总量</span>
+                <b>{formatNum(sum.stockGrams)}<i>g</i></b>
+              </div>
+              <div className="fact">
+                <span className="fact-label">够喝</span>
+                <b>{daysLeft}<i>天</i></b>
+              </div>
+              <div className="fact">
+                <span className="fact-label">最急的一袋</span>
+                <b className={urgentBean ? `fact-${urgentBean.s.meta.cls}` : ''}>
+                  {urgentBean ? urgentBean.b.name : '—'}
+                </b>
+              </div>
+            </div>
+          </section>
+
           <section className="stat-grid">
             <StatCard label="在仓豆子" value={sum.activeCount} sub={`袋 · 共 ${formatNum(sum.stockGrams)}g`} icon="coffee" accent="brown" onClick={() => go('beans')} />
             <div className="stat-wrap">
