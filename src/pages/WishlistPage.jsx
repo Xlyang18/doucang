@@ -4,6 +4,7 @@ import { resolveBean, roastLabel, methodLabel, todayStr, ROAST_LEVELS } from '..
 import { formatMoney, formatNum } from '../lib/format.js';
 import { normalizeWish, normalizeBean } from '../lib/dedup.js';
 import { Modal, ConfirmDialog, EmptyState, Segmented, Field, TagInput, PageHead, Panel } from '../components/ui.jsx';
+import Sticker from '../components/Sticker.jsx';
 import Icon from '../components/Icon.jsx';
 
 const SORTS = [
@@ -54,7 +55,12 @@ export default function WishlistPage() {
   return (
     <div className="page-inner">
       <PageHead
-        title="心愿单"
+        title={(
+          <span className="head-with-sticker">
+            心愿单
+            <span className="head-sticker"><Sticker name="star" size={40} rotate={10} /></span>
+          </span>
+        )}
         sub={`未来想买的豆子 · ${wishlist.length} 条 · 其中回购 ${wishlist.filter((w) => w.rebuyFrom).length} 条`}
         actions={
           <>
