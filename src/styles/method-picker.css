@@ -1,0 +1,98 @@
+/* ===========================================================
+   默认冲煮方案选择器（v2.3）
+   三张卡，选中态用描边 + 轻微上浮，遵循 Apple 分段选择的克制感
+   =========================================================== */
+
+.method-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 4px 0 10px;
+}
+
+.method-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform var(--dur-2) var(--ease-out),
+              border-color var(--dur-2) var(--ease-out),
+              box-shadow var(--dur-2) var(--ease-out),
+              background-color var(--dur-2) var(--ease-out);
+}
+
+.method-card:hover {
+  border-color: var(--border-strong, var(--border));
+  transform: translate3d(0, -1px, 0);
+}
+.method-card:active { transform: scale(0.985); transition-duration: 70ms; }
+
+.method-card.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.mc-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; flex: 0 0 auto;
+  border-radius: 10px;
+  background: var(--nav-hover);
+  color: var(--text-2);
+  transition: background-color var(--dur-2) var(--ease-out),
+              color var(--dur-2) var(--ease-out),
+              transform var(--dur-2) var(--ease-spring);
+}
+.method-card.is-active .mc-icon {
+  background: var(--accent);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.mc-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mc-body b { font-size: 13.5px; font-weight: 650; }
+.mc-body em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mc-grams {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  transition: color var(--dur-2) var(--ease-out);
+}
+.method-card.is-active .mc-grams { color: var(--accent); font-weight: 650; }
+
+.mc-check {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  animation: checkPop var(--dur-3) var(--ease-spring) both;
+}
+@keyframes checkPop {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 900px) {
+  .method-picker { grid-template-columns: 1fr; }
+}
