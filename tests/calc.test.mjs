@@ -92,8 +92,20 @@ test('A1 剩余克数 = 总量 - 冲煮累计', () => {
   assert.equal(snap.stockValue, 132);
 });
 
-test('A1 喝完时以 finishedWeight 为准', () => {
-  const bean = { totalWeight: 250, price: 150, finished: true, finishedWeight: 250, brewings: [{ grams: 100 }] };
+test('A1 喝完时以 finishedWeight（喝完时剩余）为准', () => {
+  // finishedWeight 是「喝完时罐里还剩多少克」，不是「用了多少克」
+  const bean = { totalWeight: 250, price: 150, finished: true, finishedWeight: 5, brewings: [{ grams: 100 }] };
+  assert.equal(usedGrams(bean), 245, '已用量 = 总量 250 − 剩余 5');
+  assert.equal(remainingGrams(bean), 5);
+});
+
+test('A1 喝完但没记剩余量时，退回冲煮记录求和', () => {
+  const bean = { totalWeight: 250, price: 150, finished: true, finishedWeight: null, brewings: [{ grams: 100 }, { grams: 80 }] };
+  assert.equal(usedGrams(bean), 180);
+});
+
+test('A1 喝完时剩余为 0 表示全部喝光', () => {
+  const bean = { totalWeight: 250, price: 150, finished: true, finishedWeight: 0, brewings: [] };
   assert.equal(usedGrams(bean), 250);
   assert.equal(remainingGrams(bean), 0);
 });
