@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import Sticker from '../components/Sticker.jsx';
 
 const FEATURES = [
   { icon: 'coffee', title: '豆仓管理', desc: '记录品牌、风味、烘焙度与时间，自动计算养豆期与最佳赏味期。' },
@@ -17,11 +18,13 @@ export default function AboutPage() {
 
   return (
     <div className="page-inner about">
-      <div className="about-hero">
-        <Logo size={72} />
+      <div className="about-hero about-hero-sticker">
+        <span className="about-sticker-l"><Sticker name="bean" size={40} rotate={-16} /></span>
+        <Logo size={88} />
         <h1>豆藏</h1>
         <p className="about-tagline">COFFEE VAULT · 为每一杯好咖啡而生</p>
         <p className="about-version">版本 {version || '1.0.0'} · macOS</p>
+        <span className="about-sticker-r"><Sticker name="leaf" size={46} rotate={14} /></span>
       </div>
 
       <p className="about-intro">
