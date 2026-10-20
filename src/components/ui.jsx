@@ -1,21 +1,146 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Icon from './Icon.jsx';
+import CountUp from './CountUp.jsx';
+import Sticker from './Sticker.jsx';
+
+/* 全局滚动锁计数：多个弹窗同时打开时，只有计数归零才恢复滚动。
+ *
+ * 曾经的 bug：第一层弹窗打开时记下 body 原有 overflow（''），
+ * 关闭时恢复——但如果此时第二层还开着，恢复成 '' 会让背景能滚；
+ * 反过来若在计数为 0 时误调 unlock，又会把 hidden 记成「原始值」。
+ * 现在用 data 属性保存原始值，且只在计数 0→1 时写、1→0 时读，
+ * 绝不把 hidden 本身当成原始值。
+ */
+let scrollLockCount = 0;
+
+function lockScroll() {
+  if (scrollLockCount === 0) {
+    // 只记住「不是 hidden」的原始值，避免把锁状态记成原始值
+    const current = document.body.style.overflow;
+    if (current !== 'hidden') document.body.dataset.prevOverflow = current;
+    document.body.style.overflow = 'hidden';
+  }
+  scrollLockCount += 1;
+  window.__scrollLockCount = scrollLockCount;
+}
+
+function unlockScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    document.body.style.overflow = document.body.dataset.prevOverflow || '';
+    delete document.body.dataset.prevOverflow;
+  }
+  window.__scrollLockCount = scrollLockCount;
+}
 
 /* ---------- Modal ---------- */
-export function Modal({ open, onClose, title, children, footer, width = 560 }) {
+/**
+ * 共享元素过渡（C4）
+ * 传入 origin（被点卡片的 getBoundingClientRect()），弹窗从那个位置「长出来」。
+ * 依据 Apple 的连续性原则：动画起点必须与被点元素视觉相连，
+ * 而不是凭空从屏幕中央淡入。曲线减速，320ms，可被「减弱动态效果」跳过。
+ */
+export function Modal({
+  open, onClose, title, children, footer, width = 560, origin = null,
+  overlayClass = '', role = 'dialog', closeOnBackdrop = true, closeOnEsc = true
+}) {
+  const panelRef = useRef(null);
+  const [morph, setMorph] = useState(null);
+  const downOnBackdrop = useRef(false);
+
+  /* ---------- ESC 关闭 ---------- */
   useEffect(() => {
-    if (!open) return;
+    if (!open || !closeOnEsc) return undefined;
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.();
+      if (e.key !== 'Escape') return;
+      // 只让位于最上层的弹窗响应，避免一次 ESC 关掉两层
+      const overlays = document.querySelectorAll('.modal-overlay');
+      const last = overlays[overlays.length - 1];
+      if (!last || !last.contains(panelRef.current)) return;
+      onClose?.();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, onClose, closeOnEsc]);
+
+  /* ---------- 滚动锁：弹窗打开时禁止背景滚动 ----------
+   * 用引用计数而不是「记住上一次的值」：
+   * 两层弹窗叠加时，第二层会把已经锁定的 hidden 当成原始值保存，
+   * 第一层关闭后把 hidden 写回去，背景就永远滚不动了。
+   */
+  useEffect(() => {
+    if (!open) return undefined;
+    lockScroll();
+    return () => { unlockScroll(); };
+  }, [open]);
+
+  /* ---------- 焦点：打开时移到面板，关闭时还原 ---------- */
+  useEffect(() => {
+    if (!open) return undefined;
+    const prevFocus = document.activeElement;
+    const el = panelRef.current;
+    if (el) {
+      el.setAttribute('tabindex', '-1');
+      // 下一帧再聚焦，等入场动画起步
+      const t = setTimeout(() => el.focus({ preventScroll: true }), 30);
+      return () => {
+        clearTimeout(t);
+        if (prevFocus && prevFocus.focus) prevFocus.focus({ preventScroll: true });
+      };
+    }
+    return undefined;
+  }, [open]);
+
+  /* ---------- 共享元素过渡 ---------- */
+  useLayoutEffect(() => {
+    if (!open) { setMorph(null); return undefined; }
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!origin || reduce) { setMorph(null); return undefined; }
+    const el = panelRef.current;
+    if (!el) return undefined;
+    const target = el.getBoundingClientRect();
+    const ow = origin.width || 1;
+    const oh = origin.height || 1;
+    if (!target.width || !target.height) return undefined;
+    setMorph({
+      transform: `translate3d(${(origin.left + ow / 2) - (target.left + target.width / 2)}px, `
+        + `${(origin.top + oh / 2) - (target.top + target.height / 2)}px, 0) `
+        + `scale(${ow / target.width}, ${oh / target.height})`,
+      opacity: 0.6
+    });
+    const t = setTimeout(() => setMorph(null), 24);
+    return () => clearTimeout(t);
+  }, [open, origin]);
 
   if (!open) return null;
+
+  /*
+   * 遮罩关闭的正确做法：
+   * 必须同时满足「按下在遮罩上」和「松开也在遮罩上」才关。
+   * 只用 onMouseDown 会误关——用户在遮罩上按住、拖到面板里松开想选文字，
+   * 弹窗就没了；在弹窗里按下、拖到遮罩松开也会误判。
+   */
+  const onDown = (e) => { downOnBackdrop.current = e.target === e.currentTarget; };
+  const onUp = (e) => {
+    const isBackdrop = e.target === e.currentTarget;
+    if (closeOnBackdrop && isBackdrop && downOnBackdrop.current) onClose?.();
+    downOnBackdrop.current = false;
+  };
+
   return (
-    <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div className="modal" style={{ maxWidth: width }} role="dialog" aria-modal="true">
+    <div
+      className={`modal-overlay ${overlayClass}`}
+      onMouseDown={onDown}
+      onMouseUp={onUp}
+      role="presentation"
+    >
+      <div
+        ref={panelRef}
+        className={`modal ${morph ? 'is-morphing' : ''}`}
+        style={{ maxWidth: width, ...(morph || {}) }}
+        role={role}
+        aria-modal="true"
+      >
         <div className="modal-head">
           <h3>{title}</h3>
           <button className="icon-btn" onClick={onClose} aria-label="关闭">
@@ -37,6 +162,8 @@ export function ConfirmDialog({ open, title = '确认操作', message, confirmTe
       onClose={onCancel}
       title={title}
       width={420}
+      overlayClass="confirm-overlay"
+      role="alertdialog"
       footer={
         <>
           <button className="btn" onClick={onCancel}>取消</button>
@@ -50,10 +177,12 @@ export function ConfirmDialog({ open, title = '确认操作', message, confirmTe
 }
 
 /* ---------- EmptyState ---------- */
-export function EmptyState({ icon = 'coffee', title, desc, action }) {
+export function EmptyState({ icon = 'coffee', sticker = null, title, desc, action }) {
   return (
     <div className="empty">
-      <div className="empty-icon"><Icon name={icon} size={30} /></div>
+      {sticker
+        ? <span className="empty-sticker"><Sticker name={sticker} size={88} /></span>
+        : <div className="empty-icon"><Icon name={icon} size={30} /></div>}
       <h3>{title}</h3>
       {desc && <p>{desc}</p>}
       {action && <div className="empty-action">{action}</div>}
@@ -177,14 +306,18 @@ export function TagInput({ value = [], onChange, suggestions = [], placeholder =
 }
 
 /* ---------- StatCard ---------- */
-export function StatCard({ label, value, sub, icon, accent, onClick, hint }) {
+export function StatCard({ label, value, sub, icon, accent, onClick, hint, countUp = true, format }) {
+  // C2：纯数字值自动做滚动动画；带单位/货币的字符串保持原样
+  const isNumeric = typeof value === 'number' && Number.isFinite(value);
   return (
     <div className={`stat-card ${onClick ? 'clickable' : ''}`} onClick={onClick} title={hint || ''}>
       <div className="stat-top">
         <span className="stat-label">{label}</span>
         {icon && <span className={`stat-icon ${accent || ''}`}><Icon name={icon} size={16} /></span>}
       </div>
-      <div className="stat-value">{value}</div>
+      <div className="stat-value">
+        {isNumeric && countUp ? <CountUp value={value} format={format} /> : value}
+      </div>
       {sub && <div className="stat-sub">{sub}</div>}
     </div>
   );
