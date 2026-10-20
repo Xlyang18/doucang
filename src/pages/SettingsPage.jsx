@@ -4,6 +4,7 @@ import { analyzeImport } from '../lib/dedup.js';
 import { ROAST_DEFAULTS } from '../lib/calc.js';
 import { Modal, ConfirmDialog, Segmented, PageHead, Field } from '../components/ui.jsx';
 import Icon from '../components/Icon.jsx';
+import Sticker from '../components/Sticker.jsx';
 
 const THEME_OPTIONS = [
   { value: 'system', label: '跟随系统' },
@@ -109,7 +110,49 @@ export default function SettingsPage() {
 
   return (
     <div className="page-inner settings">
-      <PageHead title="设置" sub="参数、外观、导出与数据管理" />
+      <PageHead
+        title={(
+          <span className="head-with-sticker">
+            设置
+            <span className="head-sticker"><Sticker name="grinder" size={40} rotate={-7} /></span>
+          </span>
+        )}
+        sub="参数、外观、导出与数据管理"
+      />
+
+      <section className="settings-section">
+        <h2 className="section-title">默认冲煮方案</h2>
+        <p className="section-desc">「喝一杯」按钮默认记哪一档。随时可在按钮右侧的小箭头切换。</p>
+        <div className="method-picker">
+          {[
+            { value: 'pour', label: '手冲', grams: settings.pourGrams || 15, ratio: '1:15', icon: 'drop', desc: 'V60 / 聪明杯' },
+            { value: 'espresso', label: '意式', grams: settings.espressoGrams || 18, ratio: '1:2', icon: 'cup', desc: '半自动 / 全自动' },
+            { value: 'immersion', label: '冷萃', grams: settings.immersionGrams || 20, ratio: '1:10', icon: 'refresh', desc: '浸泡 / 冷萃' }
+          ].map((m) => {
+            const active = (settings.defaultMethod || 'pour') === m.value;
+            return (
+              <button
+                key={m.value}
+                className={`method-card ${active ? 'is-active' : ''}`}
+                onClick={() => { setSetting('defaultMethod', m.value); toast(`默认方案已改为${m.label} ${m.grams}g`); }}
+                aria-pressed={active}
+              >
+                <span className="mc-icon"><Icon name={m.icon} size={20} /></span>
+                <span className="mc-body">
+                  <b>{m.label}</b>
+                  <em>{m.desc}</em>
+                </span>
+                <span className="mc-grams">{m.grams}g</span>
+                {active && <span className="mc-check"><Icon name="check" size={12} /></span>}
+              </button>
+            );
+          })}
+        </div>
+        <div className="settings-note">
+          <Icon name="info" size={14} />
+          <span>若某袋豆子单独设了冲煮方式，仍以这里的全局默认优先；想按豆子来，把这里切到你最常用的那一档即可。</span>
+        </div>
+      </section>
 
       <section className="settings-section">
         <h2 className="section-title">冲煮参数</h2>
