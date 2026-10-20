@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { CHANGELOG, TYPE_META } from '../lib/changelog.js';
 import { PageHead } from '../components/ui.jsx';
 import Icon from '../components/Icon.jsx';
+import Sticker from '../components/Sticker.jsx';
 
 /** 相对时间：今天 / 3 天前 / 2 个月前，比纯日期更有「刚更新过」的感觉 */
 function relativeLabel(dateStr) {
@@ -120,9 +121,14 @@ export default function ChangelogPage() {
   const toggle = (v) => setOpenSet((prev) => ({ ...prev, [v]: !prev[v] }));
 
   return (
-    <div className="page-inner changelog">
+    <div className="page-inner changelog notebook-lines">
       <PageHead
-        title="更新日志"
+        title={(
+          <span className="head-with-sticker">
+            更新日志
+            <span className="head-sticker"><Sticker name="pin" size={40} rotate={-12} /></span>
+          </span>
+        )}
         sub={`${entries.length} 个版本 · ${totalCount} 条改动 · 每次更新都记在这里 (๑•̀ㅂ•́)✧`}
         actions={
           <button
