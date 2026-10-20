@@ -53,6 +53,20 @@
 
 ![豆仓](docs/screenshots/02-beans.png)
 
+### 🎛 默认方案，按你的习惯来
+
+手冲党？意式党？冷萃党？设置里选一次，所有「喝一杯」按钮就跟着变。
+
+三档预设（手冲 15g / 意式 18g / 冷萃 20g），克数也能逐档改。
+
+![默认冲煮方案](docs/screenshots/11-settings.png)
+
+### 📈 今天还剩多少咖啡
+
+首页右上角有一块仪表盘：按最近 30 天的实际消耗，推算「这点库存还够喝几天」。
+
+低于 13 天会变橙色，提示你该补货了。
+
 ### ⚡ 一键记一杯
 
 点一下就记完，不弹表单。
@@ -129,12 +143,15 @@ Excel 6 个工作表；「美式豆册」A4 两列排版，每袋一张卡，打
 
 ![更新日志](docs/screenshots/14-changelog.png)
 
+### 📌 手账贴纸
+
+每个页面都贴了一两枚手绘贴纸：咖啡袋、手账本、研磨器、咖啡豆、日历印章、图钉…
+
+统一 2px 深描边 + 白色切边 + 轻微旋转，像真的贴在纸上。贴纸不拦截点击，绝不挡住按钮。
+
 ### 🌙 深浅色
 
-<div align="center">
-<img src="docs/screenshots/11-settings.png" width="49%" />
-<img src="docs/screenshots/12-dark.png" width="49%" />
-</div>
+![暗色模式](docs/screenshots/12-dark.png)
 
 ### 🛟 数据安全
 
