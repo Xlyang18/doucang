@@ -1,0 +1,310 @@
+/* ===========================================================
+   豆藏 · 布局与动效升级（v2.3）
+   A4 首页仪表盘 · B4 侧栏指示条 · C1 图标弹跳
+   C5 咖啡杯倾倒 · C6 空状态漂浮 · D6 间距统一
+   =========================================================== */
+
+/* ===========================================================
+   A4 · 首页 hero 区
+   =========================================================== */
+
+.home-hero {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 26px;
+  align-items: center;
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--sticker-shadow);
+  animation: heroIn var(--dur-4) var(--ease-out) both;
+}
+@keyframes heroIn {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.hero-gauge { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hero-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-3);
+  text-align: center;
+  max-width: 180px;
+  line-height: 1.5;
+}
+
+/* 仪表盘本体 */
+.gauge { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.gauge svg { display: block; }
+.gauge-fill {
+  transition: stroke-dashoffset 720ms var(--ease-in-out);
+}
+.gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 8px; /* 弧线下方留缺口放标签，视觉更稳 */
+  pointer-events: none;
+}
+.gauge-center .gauge-label {
+  margin: 0 0 2px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  text-transform: none;
+}
+.gauge-center b {
+  font-size: 30px;
+  font-weight: 720;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.gauge-center em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+}
+.gauge-label {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+}
+
+/* 右侧数据块 */
+.hero-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-content: center;
+  height: 100%;
+  max-width: 760px;
+}
+.home-hero .hero-facts .fact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;   /* 垂直居中，不是水平分散 */
+  gap: 4px;
+  padding: 0 0 0 16px;
+  border-left: 1px solid var(--border);
+  min-width: 0;
+  text-align: left;
+  width: 100%;
+}
+.home-hero .hero-facts .fact > * { width: auto; max-width: 100%; }
+.home-hero .hero-facts .fact:first-child { border-left: none; padding-left: 0; }
+.home-hero .hero-facts .fact-label {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+}
+.home-hero .hero-facts .fact b {
+  display: block;
+  font-size: 19px;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hero-facts .fact b i {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  margin-left: 2px;
+}
+.hero-facts .fact b.fact-orange { color: #C77D00; }
+.hero-facts .fact b.fact-green { color: #1F9C47; }
+.hero-facts .fact b.fact-red { color: #D63026; }
+:root[data-theme="dark"] .hero-facts .fact b.fact-orange { color: #FFB340; }
+:root[data-theme="dark"] .hero-facts .fact b.fact-green { color: #5BE08A; }
+:root[data-theme="dark"] .hero-facts .fact b.fact-red { color: #FF7A72; }
+
+@media (max-width: 860px) {
+  .home-hero { grid-template-columns: 1fr; }
+  .hero-facts { grid-template-columns: 1fr 1fr; }
+}
+
+/* ===========================================================
+   B4 · 侧栏当前页指示条
+   用一个独立滑块，在切换页面时沿 Y 轴平移，而不是每项自己变形
+   =========================================================== */
+
+.sidebar { position: relative; }
+
+.nav { position: relative; }
+
+/* 指示条：贴在 nav 左侧，通过 inline style 控制位移与高度 */
+.nav-indicator {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+  transform: translate3d(0, var(--y, 0px), 0);
+  height: var(--h, 0px);
+  opacity: 0;
+  transition: transform 320ms var(--ease-out),
+              height 260ms var(--ease-out),
+              opacity 200ms var(--ease-out);
+  pointer-events: none;
+}
+.nav-indicator.is-visible { opacity: 1; }
+
+/* 圆点顺着指示条滚一下，表达「落点」 */
+.nav-indicator::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* 导航项文字在切换时轻微上浮 */
+.nav-item.active span:not(.nav-badge) {
+  animation: navTextIn 260ms var(--ease-out) both;
+}
+@keyframes navTextIn {
+  from { opacity: 0; transform: translateX(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ===========================================================
+   C1 · 侧栏图标悬停弹跳（spring 曲线，幅度克制）
+   =========================================================== */
+
+.nav-item:hover svg {
+  transform: translateY(-1px) scale(1.08);
+}
+.nav-item:active svg {
+  transform: scale(0.94);
+  transition-duration: 80ms;
+}
+.nav-item.active svg {
+  transform: scale(1.04);
+}
+
+/* 图标切换时的「落点」微光 */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms var(--ease-out);
+}
+.nav-item:active::after { opacity: 1; transition-duration: 60ms; }
+
+/* ===========================================================
+   C5 · 快记成功：咖啡杯倾倒
+   已有 .qbrew-float 飘字，这里给主按钮加一次「倒一下」的位移
+   =========================================================== */
+
+.qbrew-main.tilt svg {
+  animation: cupTilt 520ms var(--ease-out);
+  transform-origin: 50% 80%;
+}
+@keyframes cupTilt {
+  0%   { transform: rotate(0deg); }
+  28%  { transform: rotate(-16deg) translateY(1px); }
+  55%  { transform: rotate(8deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* 倾倒时飞出的小水滴 */
+.qbrew-main .qbrew-drops {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.qbrew-main .qbrew-drops i {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  animation: dropFly 560ms var(--ease-out) forwards;
+}
+@keyframes dropFly {
+  0%   { opacity: 0.9; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx, -8px), var(--dy, 10px)) scale(0.3); }
+}
+
+/* ===========================================================
+   C6 · 空状态漂浮
+   =========================================================== */
+
+.empty-state svg,
+.empty-state .empty-icon {
+  animation: floatBob 3.6s ease-in-out infinite;
+}
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+/* ===========================================================
+   D6 · 间距统一
+   设置页 / 更新日志页 / 通用 section 用同一套节奏
+   =========================================================== */
+
+.settings-section,
+.settings .settings-section {
+  margin-bottom: 30px;
+}
+.settings-section:last-child { margin-bottom: 4px; }
+.section-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+  text-transform: none;
+}
+.section-desc {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-3);
+}
+
+/* 页头到内容的统一呼吸区 */
+.page-head { margin-bottom: 22px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero,
+  .nav-indicator,
+  .nav-item.active span,
+  .qbrew-main.tilt svg,
+  .empty-state svg {
+    animation: none !important;
+    transition: none !important;
+  }
+}
