@@ -1,0 +1,163 @@
+/* ===========================================================
+   豆藏 · 手账贴纸（v2.4）
+
+   贴纸使用规范：
+   · 每页 1~3 个，且必须与页面语义相关，不做纯装饰
+   · 贴纸永远在内容下层或边角，不遮挡可点击区域
+   · 轻微旋转 + 白描边，模拟纸胶带/贴纸手贴感
+   · 尊重减弱动效：悬停不再晃动
+   =========================================================== */
+
+.sticker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: max-content;      /* 关键：防止被 flex 压扁 */
+  pointer-events: none;        /* 贴纸不可点，避免挡住底下按钮 */
+  user-select: none;
+  line-height: 0;
+  transition: transform 320ms var(--ease-spring);
+}
+
+/* 固定尺寸：宽高由 inline style 给，这里保证不被压缩 */
+.sticker > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  flex: none;
+}
+
+/* 可交互容器内的贴纸：悬停轻微晃一下，像被人碰了下 */
+.card:hover > .sticker,
+.hero-sticker:hover .sticker,
+.sticker-hover:hover .sticker {
+  transform: rotate(4deg) scale(1.06);
+}
+
+/* ---------- 页面角落的「贴」位 ---------- */
+
+/* 1. 页头贴纸：贴在标题右侧，像手账里贴在页眉 */
+.head-with-sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+}
+.head-sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: 10px;
+  transform: translateY(-2px);   /* 让贴纸略高于文字基线，像贴上去的 */
+}
+
+/* 页头标题重排：贴纸变大后标题行要能容纳 */
+.page-head .head-with-sticker { line-height: 1.1; }
+
+/* 2. 角落贴纸：绝对定位在区块右上角，稍微出界一点更像真贴的 */
+.corner-sticker {
+  position: absolute;
+  top: -14px;
+  right: 14px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* 3. 卡片内贴纸 */
+.card-sticker {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+/* 4. 仪表盘旁的贴纸（首页 hero） */
+/* 仪表旁贴纸：放右上角，避开中心数字与弧线 */
+.hero-sticker {
+  position: absolute;
+  right: -6px;
+  top: -10px;
+  z-index: 4;
+}
+/* 仪表容器需要相对定位承载贴纸 */
+.hero-gauge { position: relative; }
+
+/* 5. 空状态中央大贴纸 */
+.empty-sticker {
+  position: relative;
+  display: inline-flex;
+  margin-bottom: 6px;
+}
+
+/* 6. 悬浮在页面背景的「散落」贴纸，非常淡，只在宽屏出现 */
+.scatter-sticker {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.12;
+  z-index: 0;
+  filter: saturate(0.6);
+}
+@media (max-width: 1100px) {
+  .scatter-sticker { display: none; }
+}
+
+/* ---------- 贴纸的「纸感」：轻微内阴影，像贴纸有厚度 ---------- */
+.sticker svg { filter: drop-shadow(0 1px 1px rgba(0,0,0,0.06)); }
+
+/* ---------- 手账感的页面底纹：极淡横线，像笔记本内页 ---------- */
+.notebook-lines {
+  position: relative;
+}
+.notebook-lines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 33px,
+    rgba(176, 113, 63, 0.055) 33px,
+    rgba(176, 113, 63, 0.055) 34px
+  );
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+
+/* 深色模式下横线用亮色 */
+:root[data-theme="dark"] .notebook-lines::before {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 33px,
+    rgba(255, 255, 255, 0.045) 33px,
+    rgba(255, 255, 255, 0.045) 34px
+  );
+}
+
+/* 内容需要浮在横线上方 */
+.notebook-lines > * { position: relative; z-index: 1; }
+
+/* ---------- 纸胶带（用于给卡片「贴」一条） ---------- */
+.tape {
+  position: absolute;
+  width: 54px;
+  height: 16px;
+  background: rgba(232, 168, 124, 0.55);
+  border-left: 1px dashed rgba(255, 255, 255, 0.6);
+  border-right: 1px dashed rgba(255, 255, 255, 0.6);
+  transform: rotate(-4deg);
+  pointer-events: none;
+  z-index: 4;
+  mix-blend-mode: multiply;
+}
+:root[data-theme="dark"] .tape { mix-blend-mode: screen; opacity: 0.5; }
+.tape-tl { top: -7px; left: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker, .card:hover > .sticker { transition: none !important; transform: none !important; }
+}
