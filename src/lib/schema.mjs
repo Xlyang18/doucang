@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS = {
   pourGrams: 15,
   espressoGrams: 18,
   immersionGrams: 20,
+  defaultMethod: 'pour',
   theme: 'system',
   overdueNotify: true,
   servicePort: 47823
@@ -146,6 +147,7 @@ export function migrate(input) {
       pourGrams: num(settings.pourGrams) || 15,
       espressoGrams: num(settings.espressoGrams) || 18,
       immersionGrams: num(settings.immersionGrams) || 20,
+      defaultMethod: ['pour','espresso','immersion'].includes(settings.defaultMethod) ? settings.defaultMethod : 'pour',
       servingGrams: num(settings.servingGrams) || 18,
       theme: ['system', 'light', 'dark'].includes(settings.theme) ? settings.theme : 'system',
       overdueNotify: settings.overdueNotify === undefined ? true : !!settings.overdueNotify,
