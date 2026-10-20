@@ -127,8 +127,15 @@ export function brewingsOf(bean = {}) {
 }
 
 export function usedGrams(bean = {}) {
-  if (bean.finished && numOrNull(bean.finishedWeight) > 0) {
-    return Number(bean.finishedWeight);
+  const total = Number(bean.totalWeight) || 0;
+  const fw = numOrNull(bean.finishedWeight);
+  /*
+   * finishedWeight 的语义是「喝完时还剩多少克」（残渣/损耗），不是「用了多少」。
+   * 所以喝完的豆子，已用量 = 总量 − 剩余；
+   * 若剩余没记录（null），则退回用冲煮记录求和。
+   */
+  if (bean.finished && fw != null && fw >= 0) {
+    return Math.max(0, total - fw);
   }
   return brewingsOf(bean).reduce((s, b) => s + (Number(b.grams) || 0), 0);
 }
