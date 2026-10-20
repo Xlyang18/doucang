@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useApp } from '../store/AppContext.jsx';
 import Icon from './Icon.jsx';
 import Logo from './Logo.jsx';
@@ -27,6 +27,38 @@ export default function Sidebar() {
     return (s.status === 'peak' && s.progress.days <= 5) || s.status === 'past';
   }).length;
 
+  // B4：当前页指示条 —— 量出 active 项的位置，用一个滑块平移过去
+  const navRef = useRef(null);
+  const [indicator, setIndicator] = useState({ y: 0, h: 0, visible: false });
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const el = nav.querySelector('.nav-item.active');
+    if (!el) { setIndicator((s) => ({ ...s, visible: false })); return; }
+    const navBox = nav.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    setIndicator({
+      y: box.top - navBox.top + nav.scrollTop + 8,
+      h: Math.max(0, box.height - 16),
+      visible: true
+    });
+  }, [page]);
+
+  // 窗口尺寸变化时重新量
+  useEffect(() => {
+    const onResize = () => {
+      const nav = navRef.current;
+      const el = nav && nav.querySelector('.nav-item.active');
+      if (!nav || !el) return;
+      const navBox = nav.getBoundingClientRect();
+      const box = el.getBoundingClientRect();
+      setIndicator({ y: box.top - navBox.top + nav.scrollTop + 8, h: Math.max(0, box.height - 16), visible: true });
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -36,7 +68,12 @@ export default function Sidebar() {
           <span className="brand-sub">COFFEE VAULT</span>
         </div>
       </div>
-      <nav className="nav">
+      <nav className="nav" ref={navRef}>
+        <span
+          className={`nav-indicator ${indicator.visible ? 'is-visible' : ''}`}
+          style={{ '--y': `${indicator.y}px`, '--h': `${indicator.h}px` }}
+          aria-hidden="true"
+        />
         {ITEMS.map((item) => {
           const badge = item.id === 'beans' ? activeCount : item.id === 'wishlist' ? wishCount : 0;
           return (
